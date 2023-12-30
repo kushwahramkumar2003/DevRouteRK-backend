@@ -38,7 +38,7 @@ app.use(invalidPathHandler);
 // });
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Happy new year!");
 });
 
 export default app;
