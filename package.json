@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon  server.mjs"
+    "dev": "nodemon  server.mjs",
+    "build": "npm run install-deps && npm run pre-build && npm run post-build",
+    "install-deps": "npm install",
+    "pre-build": "echo 'Performing pre-build tasks...'",
+    "post-build": "echo 'Build completed.'"
   },
   "author": "Ramkumar kushwah",
   "license": "MIT",
