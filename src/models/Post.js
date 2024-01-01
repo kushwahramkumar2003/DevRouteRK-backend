@@ -1,4 +1,3 @@
-import { formToJSON } from "axios";
 import { Schema, model } from "mongoose";
 
 const PostSchema = new Schema(
