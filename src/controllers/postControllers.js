@@ -48,7 +48,7 @@ export const updatePost = asyncHandler(async (req, res) => {
 
     console.log("Update data : ", req.body.document);
 
-    const { title, caption, body, tags, categories ,slug} = JSON.parse(
+    const { title, caption, body, tags, categories, slug } = JSON.parse(
       req.body.document
     );
 
@@ -67,7 +67,7 @@ export const updatePost = asyncHandler(async (req, res) => {
   } else {
     console.log("no image");
     post.photo = "";
-    const { title, caption, body, tags, categories,slug } = JSON.parse(
+    const { title, caption, body, tags, categories, slug } = JSON.parse(
       req.body.document
     );
 
@@ -180,6 +180,8 @@ export const getAllPosts = asyncHandler(async (req, res) => {
     "x-currentPage": JSON.stringify(page),
     "x-pageSize": JSON.stringify(pageSize),
     "x-totalPagesCount": JSON.stringify(pages),
+    "Access-Control-Expose-Headers":
+      "x-filter, x-totalCount, x-currentPage, x-pageSize, x-totalPagesCount",
   });
 
   if (page > pages) {
