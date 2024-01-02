@@ -15,7 +15,24 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-app.use(cors({ origin: "*" }));
+// app.use(cors({ origin: "*" }));
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://quiz-app-backend-cloud.azurewebsites.net",
+  "https://dev-routes-rk.netlify.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      const isAllowed = allowedOrigins.includes(origin) || !origin;
+      callback(null, isAllowed);
+    },
+    credentials: true, // Set the credentials option to true
+  })
+);
+
 app.use(express.json());
 app.use(cookieParser());
 
