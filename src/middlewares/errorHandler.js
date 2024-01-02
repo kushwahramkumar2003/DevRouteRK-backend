@@ -12,6 +12,12 @@ export const errorResponserHandler = (err, req, res, next) => {
 export const invalidPathHandler = (req, res, next) => {
   let error = new CustomError(`Invalid Path : ${req.originalUrl}`);
 
+  res.status(404).json({
+    success: false,
+    message: error.message,
+    error: error,
+  });
+
   error.statusCode = 404;
 
   throw error;

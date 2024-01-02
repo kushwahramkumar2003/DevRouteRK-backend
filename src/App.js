@@ -7,7 +7,7 @@ import { dirname } from "path";
 import fileUpload from "express-fileupload";
 
 import routes from "./routes/routes.js";
-import { invalidPathHandler } from "./middlewares/errorHandler.js";
+// import { invalidPathHandler } from "./middlewares/errorHandler.js";
 import path from "path";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,18 +44,17 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+app.get("/", (req, res) => {
+  res.send("Happy new year!");
+});
 app.use("/api/v1", routes);
 
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
-app.use(invalidPathHandler);
+// app.use(invalidPathHandler);
 
 // app.use("*", (req, res) => {
 //   res.status(404).json({ error: "not found" });
 // });
-
-app.get("/", (req, res) => {
-  res.send("Happy new year!");
-});
 
 export default app;
