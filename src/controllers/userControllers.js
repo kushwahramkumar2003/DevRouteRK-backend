@@ -105,7 +105,7 @@ export const updateProfile = asyncHandler(async (req, res, next) => {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
-    if (req.body.password && req.body.password.length > 6) {
+    if (req.body.password && req.body.password.length < 6) {
       throw new CustomError(
         "Password should be greater than 6 characters",
         400

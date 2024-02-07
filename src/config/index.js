@@ -3,8 +3,7 @@ dotenv.config();
 
 const config = {
   MONGODB_URL:
-    process.env.MONGODB_URL ||
-    "mongodb://localhost:27017/dev_route-rk",
+    process.env.MONGODB_URL || "mongodb://localhost:27017/dev_route-rk",
   PORT: process.env.PORT || 3001,
 
   JWT_SECRET: process.env.JWT_SECRET || "secret",
