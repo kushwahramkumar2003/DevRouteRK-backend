@@ -18,14 +18,44 @@ export const createPostCategory = asyncHandler(async (req, res) => {
 });
 
 export const getAllPostCategories = asyncHandler(async (req, res) => {
-  const postCategories = await PostCategories.find();
+  console.log("req arrived");
+  const filter = req.query.searchKeyword;
+  let where = {};
+  if (filter) {
+    where.title = { $regex: filter, $options: "i" };
+  }
+  let query = PostCategories.find(where);
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * pageSize;
+  const total = await PostCategories.find(where).countDocuments();
+  const pages = Math.ceil(total / pageSize);
 
-  if (!postCategories) {
-    res.status(400);
-    throw new Error("Post category not exists");
+  console.log("pages ", pages);
+
+  res.header({
+    "x-count": JSON.stringify(pages),
+    "x-filter": filter,
+    "x-totalPageCount": JSON.stringify(pages),
+    "x-totalcount": JSON.stringify(total),
+    "x-currentpage": JSON.stringify(page),
+    "x-pagesize": JSON.stringify(pageSize),
+    "Access-Control-Expose-Headers":
+      "x-filter, x-totalCount, x-currentPage, x-pageSize, x-totalpagescount, x-count",
+  });
+
+  console.log(res.header);
+
+  if (page > pages) {
+    return res.json([]);
   }
 
-  res.status(201).json(postCategories);
+  const result = await query
+    .skip(skip)
+    .limit(pageSize)
+    .sort({ updatedAt: "desc" });
+
+  return res.status(200).json(result);
 });
 
 export const updatePostCategory = asyncHandler(async (req, res) => {
