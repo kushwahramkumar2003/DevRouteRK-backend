@@ -84,13 +84,14 @@ export const getAllComments = asyncHandler(async (req, res) => {
   const pages = Math.ceil(total / pageSize);
 
   res.header({
+    "x-count": JSON.stringify(pages),
     "x-filter": filter,
     "x-totalCount": JSON.stringify(total),
     "x-currentPage": JSON.stringify(page),
     "x-pageSize": JSON.stringify(pageSize),
     "x-totalPagesCount": JSON.stringify(pages),
     "Access-Control-Expose-Headers":
-      "x-filter, x-totalCount, x-currentPage, x-pageSize, x-totalPagesCount",
+      "x-filter, x-totalCount, x-currentPage, x-pageSize, x-totalPagesCount, x-count",
   });
 
   if (page > pages) {
