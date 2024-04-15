@@ -99,40 +99,45 @@ export const userProfile = asyncHandler(async (req, res, next) => {
 });
 
 export const updateProfile = asyncHandler(async (req, res, next) => {
-  const user = await User.findById(req.user._id);
+  const userIdToUpdate = req.params.userId;
 
-  if (user) {
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
+  let userId = req.user._id;
 
-    if (req.body.password && req.body.password.length < 6) {
-      throw new CustomError(
-        "Password should be greater than 6 characters",
-        400
-      );
-    } else if (req.body.password) {
-      user.password = req.body.password;
-    }
-
-    const updatedUserProfile = await user.save();
-
-    const token = await updatedUserProfile.generateJWT();
-
-    updatedUserProfile.password = undefined;
-
-    res.status(200).json({
-      success: true,
-      _id: updatedUserProfile._id,
-      avatar: updatedUserProfile.avatar,
-      name: updatedUserProfile.name,
-      email: updatedUserProfile.email,
-      verified: updatedUserProfile.verified,
-      admin: updatedUserProfile.admin,
-      token,
-    });
-  } else {
-    throw new CustomError("User not found", 404);
+  if (!req.user.admin && userId !== userIdToUpdate) {
+    let error = new Error("Forbidden resource");
+    error.statusCode = 403;
+    throw error;
   }
+
+  let user = await User.findById(userIdToUpdate);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (typeof req.body.admin !== "undefined" && req.user.admin) {
+    user.admin = req.body.admin;
+  }
+
+  user.name = req.body.name || user.name;
+  user.email = req.body.email || user.email;
+  if (req.body.password && req.body.password.length < 6) {
+    throw new Error("Password length must be at least 6 character");
+  } else if (req.body.password) {
+    user.password = req.body.password;
+  }
+
+  const updatedUserProfile = await user.save();
+
+  res.json({
+    _id: updatedUserProfile._id,
+    avatar: updatedUserProfile.avatar,
+    name: updatedUserProfile.name,
+    email: updatedUserProfile.email,
+    verified: updatedUserProfile.verified,
+    admin: updatedUserProfile.admin,
+    token: await updatedUserProfile.generateJWT(),
+  });
 });
 
 export const updateProfilePicture = asyncHandler(async (req, res, next) => {
@@ -191,3 +196,75 @@ export const updateProfilePicture = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const filter = req.query.searchKeyword;
+    let where = {};
+    if (filter) {
+      where.email = { $regex: filter, $options: "i" };
+    }
+    let query = User.find(where);
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * pageSize;
+    const total = await User.find(where).countDocuments();
+    const pages = Math.ceil(total / pageSize);
+
+    res.header({
+      "x-filter": filter,
+      "x-count": JSON.stringify(pages),
+      "x-totalcount": JSON.stringify(total),
+      "x-currentpage": JSON.stringify(page),
+      "x-pagesize": JSON.stringify(pageSize),
+      "x-totalpagecount": JSON.stringify(pages),
+      "Access-Control-Expose-Headers":
+        "x-filter, x-totalCount, x-currentPage, x-pageSize, x-totalpagescount, x-count",
+    });
+
+    if (page > pages) {
+      return res.json([]);
+    }
+
+    const result = await query
+      .skip(skip)
+      .limit(pageSize)
+      .sort({ updatedAt: "desc" });
+
+    return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUser = async (req, res, next) => {
+  try {
+    let user = await User.findById(req.params.userId);
+
+    if (!user) {
+      throw new Error("User no found");
+    }
+
+    const postsToDelete = await Post.find({ user: user._id });
+    const postIdsToDelete = postsToDelete.map((post) => post._id);
+
+    await Comment.deleteMany({
+      post: { $in: postIdsToDelete },
+    });
+
+    await Post.deleteMany({
+      _id: { $in: postIdsToDelete },
+    });
+
+    postsToDelete.forEach((post) => {
+      fileRemover(post.photo);
+    });
+
+    await user.remove();
+    fileRemover(user.avatar);
+
+    res.status(204).json({ message: "User is deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
